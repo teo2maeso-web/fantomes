@@ -5,12 +5,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        paper: "#16140F",
-        ink: "#F3EFE6",
-        moss: "#8FD9BE",
-        rust: "#C97A2B",
-        line: "#33302A",
-        cardtext: "#221E17",
+        paper: "#E9F1F3",
+        ink: "#16283D",
+        moss: "#3D6B7A",
+        rust: "#C9922E",
+        line: "#C4D6DB",
+        cardtext: "#16283D",
       },
       fontFamily: {
         display: ["var(--font-fraunces)"],

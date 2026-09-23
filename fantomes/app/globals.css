@@ -11,11 +11,11 @@
 }
 
 ::selection {
-  background: #8fd9be;
-  color: #16140f;
+  background: #3d6b7a;
+  color: #e9f1f3;
 }
 
 *:focus-visible {
-  outline: 2px solid #8fd9be;
+  outline: 2px solid #3d6b7a;
   outline-offset: 2px;
 }
