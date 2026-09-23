@@ -6,11 +6,16 @@ export default function Success() {
         Merci. Ton audit arrive par email sous 24h.
       </h1>
       <p className="mt-4 text-ink/70">
-        On revient vers toi à l&apos;adresse que tu as indiquée au paiement,
-        avec la liste de tes abonnements fantômes et les lettres de
-        résiliation prêtes à envoyer.
+        Dépose ton relevé bancaire ci-dessous pour voir tes abonnements
+        fantômes et générer tes lettres de résiliation.
       </p>
-      <a href="/" className="mt-8 text-sm text-moss underline">
+      <a
+        href="/audit"
+        className="mt-8 inline-block bg-moss px-6 py-3 font-body font-medium text-paper"
+      >
+        Accéder à mon audit
+      </a>
+      <a href="/" className="mt-4 text-sm text-moss underline">
         Retour à l&apos;accueil
       </a>
     </main>
