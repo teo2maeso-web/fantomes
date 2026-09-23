@@ -179,7 +179,7 @@ export default function AuditPage() {
                         <textarea
                           readOnly
                           value={generateCancellationLetter(s)}
-                          className="h-48 w-full border border-line bg-white p-3 text-sm text-ink"
+                          className="h-48 w-full border border-line bg-white p-3 text-sm text-cardtext"
                         />
                         <button
                           onClick={() => copyLetter(s)}

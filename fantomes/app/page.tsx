@@ -1,3 +1,5 @@
+import { GhostMark } from "@/components/GhostMark";
+
 function CtaButton({ label }: { label: string }) {
   return (
     <form action="/api/checkout" method="POST">
@@ -14,7 +16,7 @@ function CtaButton({ label }: { label: string }) {
 function BenefitLine({ title, text }: { title: string; text: string }) {
   return (
     <div className="flex gap-4">
-      <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-moss" />
+      <GhostMark className="mt-0.5 h-5 w-5 shrink-0 text-moss" />
       <div>
         <p className="font-body font-medium text-ink">{title}</p>
         <p className="mt-1 text-sm leading-relaxed text-ink/70">{text}</p>
@@ -47,8 +49,8 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
 function ExampleLine({ label, amount }: { label: string; amount: string }) {
   return (
     <div className="flex items-baseline justify-between gap-4">
-      <p className="text-sm text-ink/70">{label}</p>
-      <p className="whitespace-nowrap font-display text-base text-ink">
+      <p className="text-sm text-cardtext/70">{label}</p>
+      <p className="whitespace-nowrap font-display text-base text-cardtext">
         {amount}
       </p>
     </div>
@@ -62,7 +64,8 @@ function TrustBadge({ text }: { text: string }) {
 export default function Home() {
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col px-6 py-12 sm:py-16">
-      <p className="font-body text-sm text-ink/60">Audit d&apos;abonnements</p>
+      <GhostMark className="h-10 w-10 text-moss" />
+      <p className="mt-3 font-body text-sm text-ink/60">Audit d&apos;abonnements</p>
 
       <h1 className="mt-4 font-display text-4xl leading-[1.1] text-ink sm:text-5xl">
         Tu paies encore pour des trucs que tu as oubliés.
@@ -107,7 +110,7 @@ export default function Home() {
       <div className="mt-10">
         <p className="text-sm text-ink/60">À quoi ressemble ton résultat</p>
         <div className="mt-3 border border-line bg-white p-4">
-          <p className="text-xs uppercase tracking-wide text-ink/40">
+          <p className="text-xs uppercase tracking-wide text-cardtext/40">
             Exemple
           </p>
           <div className="mt-3 space-y-3">
@@ -116,7 +119,7 @@ export default function Home() {
             <ExampleLine label="Essai gratuit devenu payant" amount="72€/an" />
           </div>
           <div className="mt-4 flex items-baseline justify-between border-t border-line pt-3">
-            <p className="text-sm font-medium text-ink">Total récupérable</p>
+            <p className="text-sm font-medium text-cardtext">Total récupérable</p>
             <p className="font-display text-xl text-rust">707€/an</p>
           </div>
         </div>
