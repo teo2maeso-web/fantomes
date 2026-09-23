@@ -150,16 +150,29 @@ export default function AuditPage() {
                       {s.lastDate.toLocaleDateString("fr-FR")}
                     </p>
 
-                    <button
-                      onClick={() =>
-                        setOpenLetter(openLetter === s.label ? null : s.label)
-                      }
-                      className="mt-2 text-sm text-moss underline"
-                    >
-                      {openLetter === s.label
-                        ? "Masquer la lettre"
-                        : "Voir la lettre de résiliation"}
-                    </button>
+                    <div className="mt-2 flex gap-4">
+                      <button
+                        onClick={() =>
+                          setOpenLetter(openLetter === s.label ? null : s.label)
+                        }
+                        className="text-sm text-moss underline"
+                      >
+                        {openLetter === s.label
+                          ? "Masquer la lettre"
+                          : "Voir la lettre de résiliation"}
+                      </button>
+
+                      <a
+                        href={`https://www.google.com/search?q=${encodeURIComponent(
+                          `résilier ${s.label} procédure contact`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-moss underline"
+                      >
+                        Comment résilier ↗
+                      </a>
+                    </div>
 
                     {openLetter === s.label && (
                       <div className="mt-3">

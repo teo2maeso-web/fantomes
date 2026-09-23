@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
         {
           price_data: {
             currency: "eur",
-            unit_amount: 1900,
+            unit_amount: 900,
             product_data: {
               name: "Audit Fantômes — abonnements oubliés",
               description:

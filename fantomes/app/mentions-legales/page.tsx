@@ -35,7 +35,7 @@ export default function MentionsLegales() {
         <p>
           Fantômes propose un audit unique des abonnements récurrents
           détectés sur un relevé bancaire fourni par le client, livré par
-          email. Le prix de l&apos;audit est de 19€ TTC, payable en une
+          email. Le prix de l&apos;audit est de 9€ TTC, payable en une
           fois au moment de la commande via Stripe.
         </p>
         <p>

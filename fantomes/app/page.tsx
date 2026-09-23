@@ -75,7 +75,7 @@ export default function Home() {
       </p>
 
       <div className="mt-8">
-        <CtaButton label="Payer 19€ — voir mes abonnements fantômes" />
+        <CtaButton label="Payer 9€ — voir mes abonnements fantômes" />
         <p className="mt-3 text-center text-xs text-ink/50">
           Paiement sécurisé par Stripe. Résultat instantané.
         </p>
@@ -183,7 +183,7 @@ export default function Home() {
       </div>
 
       <div className="mt-10">
-        <CtaButton label="Payer 19€ — lancer mon audit" />
+        <CtaButton label="Payer 9€ — lancer mon audit" />
         <p className="mt-3 text-center text-xs text-ink/50">
           Paiement sécurisé par Stripe. Résultat instantané.
         </p>

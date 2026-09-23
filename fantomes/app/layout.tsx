@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://fantomes.app"),
   title: "Fantômes — Débusque les abonnements qu'on paie sans s'en servir",
   description:
-    "Dépose ton relevé bancaire, on repère les prélèvements oubliés et on génère tes lettres de résiliation. Audit complet pour 19€.",
+    "Dépose ton relevé bancaire, on repère les prélèvements oubliés et on génère tes lettres de résiliation. Audit complet pour 9€.",
   openGraph: {
     title: "Fantômes — Débusque les abonnements qu'on paie sans s'en servir",
     description:
