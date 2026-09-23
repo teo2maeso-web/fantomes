@@ -6,92 +6,124 @@ import {
   detectSubscriptions,
 } from "./detectSubscriptions";
 
-// Une ligne de relevé ressemble en général à :
-// "12/03/2026  PRLV SEPA NETFLIX.COM  1234567AB  -13,99"
-// On cherche : une date en début de ligne, un montant signé en fin de ligne,
-// et on garde tout ce qu'il y a entre les deux comme libellé.
-const LINE_PATTERN =
-  /(\d{1,2}[/.]\d{1,2}[/.]\d{2,4})\s+(.+?)\s+(-?\d[\d\s]*[.,]\d{2})\s*€?\s*$/;
+type RawItem = { str: string; x: number; y: number };
 
-async function extractPdfLines(file: File): Promise<string[]> {
+const DATE_PATTERN = /^\d{1,2}[/.]\d{1,2}[/.]\d{2,4}$/;
+const AMOUNT_ITEM_PATTERN = /^(-?\d[\d\s]*[.,]\d{2})\s*(EUR|€)?$/i;
+const EUR_ONLY_PATTERN = /^(EUR|€)$/i;
+
+function stripAccents(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+async function extractPdfItemsByPage(file: File): Promise<RawItem[][]> {
   const pdfjsLib = await import("pdfjs-dist");
   pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
   const buffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
 
-  const lines: string[] = [];
+  const pages: RawItem[][] = [];
 
   for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
     const page = await pdf.getPage(pageNum);
     const content = await page.getTextContent();
-
-    type Item = { str: string; x: number; y: number };
     const rawItems = content.items as Array<{ str?: string; transform?: number[] }>;
-    const items: Item[] = rawItems
+    const items: RawItem[] = rawItems
       .filter(
         (it): it is { str: string; transform: number[] } =>
           typeof it.str === "string" && it.str.trim().length > 0 && !!it.transform
       )
-      .map((it) => ({
-        str: it.str,
-        x: it.transform[4],
-        y: it.transform[5],
-      }));
+      .map((it) => ({ str: it.str.trim(), x: it.transform[4], y: it.transform[5] }));
+    pages.push(items);
+  }
 
-    // Regroupe les fragments de texte par ligne (même hauteur, à ~3px près)
-    const rows = new Map<number, Item[]>();
-    for (const item of items) {
-      const key = Math.round(item.y / 3) * 3;
-      if (!rows.has(key)) rows.set(key, []);
-      rows.get(key)!.push(item);
-    }
+  return pages;
+}
 
-    const sortedRows = [...rows.entries()].sort((a, b) => b[0] - a[0]);
-    for (const [, rowItems] of sortedRows) {
-      const line = rowItems
-        .sort((a, b) => a.x - b.x)
+function groupIntoRows(items: RawItem[]): RawItem[][] {
+  const rows = new Map<number, RawItem[]>();
+  for (const item of items) {
+    const key = Math.round(item.y / 3) * 3;
+    if (!rows.has(key)) rows.set(key, []);
+    rows.get(key)!.push(item);
+  }
+  return [...rows.entries()]
+    .sort((a, b) => b[0] - a[0])
+    .map(([, rowItems]) => rowItems.sort((a, b) => a.x - b.x));
+}
+
+function findColumnX(rows: RawItem[][], keyword: string): number | null {
+  for (const row of rows) {
+    const match = row.find((it) => stripAccents(it.str).startsWith(keyword));
+    if (match) return match.x;
+  }
+  return null;
+}
+
+export async function parsePdfStatement(file: File): Promise<DetectionResult> {
+  let pages: RawItem[][];
+  try {
+    pages = await extractPdfItemsByPage(file);
+  } catch {
+    return {
+      ok: false,
+      error:
+        "Impossible de lire ce PDF — il est peut-être scanné (image) plutôt que texte.",
+    };
+  }
+
+  const transactions: Transaction[] = [];
+  let debitX: number | null = null;
+  let creditX: number | null = null;
+
+  for (const items of pages) {
+    const rows = groupIntoRows(items);
+
+    const pageDebitX = findColumnX(rows, "debit");
+    const pageCreditX = findColumnX(rows, "credit");
+    if (pageDebitX !== null) debitX = pageDebitX;
+    if (pageCreditX !== null) creditX = pageCreditX;
+
+    for (const row of rows) {
+      const dateItem = row[0];
+      if (!dateItem || !DATE_PATTERN.test(dateItem.str)) continue;
+
+      const amountItems = row.filter((it) => AMOUNT_ITEM_PATTERN.test(it.str));
+      if (amountItems.length !== 1) continue; // ligne ambiguë (0 ou plusieurs montants) : on l'ignore
+
+      const amountItem = amountItems[0];
+      const match = amountItem.str.match(AMOUNT_ITEM_PATTERN);
+      const date = parseDate(dateItem.str);
+      const rawAmount = match ? parseFrenchNumber(match[1]) : null;
+      if (!date || rawAmount === null) continue;
+
+      let signedAmount: number;
+      if (debitX !== null && creditX !== null) {
+        const distToDebit = Math.abs(amountItem.x - debitX);
+        const distToCredit = Math.abs(amountItem.x - creditX);
+        signedAmount = distToDebit <= distToCredit ? -Math.abs(rawAmount) : Math.abs(rawAmount);
+      } else {
+        // Colonnes Débit/Crédit non repérées : on suppose une sortie d'argent
+        signedAmount = -Math.abs(rawAmount);
+      }
+
+      const label = row
+        .slice(1)
+        .filter((it) => it !== amountItem && !EUR_ONLY_PATTERN.test(it.str))
         .map((it) => it.str)
         .join(" ")
         .replace(/\s+/g, " ")
         .trim();
-      if (line) lines.push(line);
+
+      if (!label) continue;
+
+      transactions.push({ date, label, amount: signedAmount });
     }
   }
-
-  return lines;
-}
-
-function linesToTransactions(lines: string[]): Transaction[] {
-  const transactions: Transaction[] = [];
-
-  for (const line of lines) {
-    const match = line.match(LINE_PATTERN);
-    if (!match) continue;
-
-    const [, rawDate, rawLabel, rawAmount] = match;
-    const date = parseDate(rawDate);
-    const amount = parseFrenchNumber(rawAmount);
-    if (!date || amount === null) continue;
-
-    transactions.push({ date, label: rawLabel.trim(), amount });
-  }
-
-  return transactions;
-}
-
-export async function parsePdfStatement(file: File): Promise<DetectionResult> {
-  let lines: string[];
-  try {
-    lines = await extractPdfLines(file);
-  } catch {
-    return {
-      ok: false,
-      error: "Impossible de lire ce PDF — il est peut-être scanné (image) plutôt que texte.",
-    };
-  }
-
-  const transactions = linesToTransactions(lines);
 
   if (!transactions.length) {
     return {
