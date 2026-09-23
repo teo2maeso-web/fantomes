@@ -6,6 +6,7 @@ import {
   generateCancellationLetter,
   type Subscription,
 } from "@/lib/detectSubscriptions";
+import { parsePdfStatement } from "@/lib/parsePdfStatement";
 
 type State =
   | { step: "idle" }
@@ -18,12 +19,17 @@ export default function AuditPage() {
   const [openLetter, setOpenLetter] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
-  function handleFile(file: File) {
+  async function handleFile(file: File) {
     setState({ step: "loading" });
-    const reader = new FileReader();
-    reader.onload = () => {
-      const text = reader.result as string;
-      const result = parseBankStatement(text);
+
+    const isPdf =
+      file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+
+    try {
+      const result = isPdf
+        ? await parsePdfStatement(file)
+        : await readAsText(file).then(parseBankStatement);
+
       if (!result.ok) {
         setState({ step: "error", message: result.error });
         return;
@@ -33,11 +39,18 @@ export default function AuditPage() {
         subscriptions: result.subscriptions,
         transactionCount: result.transactionCount,
       });
-    };
-    reader.onerror = () => {
+    } catch {
       setState({ step: "error", message: "Impossible de lire ce fichier." });
-    };
-    reader.readAsText(file, "UTF-8");
+    }
+  }
+
+  function readAsText(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error("Lecture impossible"));
+      reader.readAsText(file, "UTF-8");
+    });
   }
 
   async function copyLetter(subscription: Subscription) {
@@ -64,22 +77,22 @@ export default function AuditPage() {
 
       <h1 className="mt-6 font-display text-3xl text-ink">Ton audit</h1>
       <p className="mt-2 text-ink/70">
-        Dépose ton relevé bancaire au format CSV (exporté depuis ta banque en
-        ligne). Tout reste dans ton navigateur — rien n&apos;est envoyé sur un
-        serveur.
+        Dépose ton relevé bancaire, en CSV ou en PDF (celui que ta banque te
+        propose). Tout reste dans ton navigateur — rien n&apos;est envoyé sur
+        un serveur.
       </p>
 
       {state.step === "idle" && (
         <label className="mt-8 flex cursor-pointer flex-col items-center justify-center border border-dashed border-line px-6 py-10 text-center">
           <span className="font-body font-medium text-ink">
-            Choisir un fichier CSV
+            Choisir un fichier CSV ou PDF
           </span>
           <span className="mt-1 text-sm text-ink/50">
             Export de relevé bancaire
           </span>
           <input
             type="file"
-            accept=".csv,text/csv"
+            accept=".csv,text/csv,.pdf,application/pdf"
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];

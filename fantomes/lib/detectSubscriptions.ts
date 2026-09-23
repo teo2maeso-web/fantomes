@@ -21,7 +21,7 @@ export type DetectionResult =
 
 // --- Parsing des nombres et dates au format français ---
 
-function parseFrenchNumber(raw: string): number | null {
+export function parseFrenchNumber(raw: string): number | null {
   const cleaned = raw
     .replace(/\s/g, "")
     .replace(/€/g, "")
@@ -30,7 +30,7 @@ function parseFrenchNumber(raw: string): number | null {
   return Number.isFinite(value) ? value : null;
 }
 
-function parseDate(raw: string): Date | null {
+export function parseDate(raw: string): Date | null {
   const trimmed = raw.trim();
 
   // Format JJ/MM/AAAA ou JJ-MM-AAAA
@@ -159,7 +159,7 @@ export function parseBankStatement(csvText: string): DetectionResult {
 
 // --- Étape 2 : regrouper et détecter la régularité ---
 
-function detectSubscriptions(transactions: Transaction[]): Subscription[] {
+export function detectSubscriptions(transactions: Transaction[]): Subscription[] {
   const debits = transactions.filter((t) => t.amount < 0);
 
   const groups = new Map<string, Transaction[]>();
