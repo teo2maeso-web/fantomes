@@ -27,8 +27,12 @@ async function extractPdfLines(file: File): Promise<string[]> {
     const content = await page.getTextContent();
 
     type Item = { str: string; x: number; y: number };
-    const items: Item[] = content.items
-      .filter((it): it is typeof it & { str: string } => "str" in it && !!it.str.trim())
+    const rawItems = content.items as Array<{ str?: string; transform?: number[] }>;
+    const items: Item[] = rawItems
+      .filter(
+        (it): it is { str: string; transform: number[] } =>
+          typeof it.str === "string" && it.str.trim().length > 0 && !!it.transform
+      )
       .map((it) => ({
         str: it.str,
         x: it.transform[4],
