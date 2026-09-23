@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, IBM_Plex_Sans } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -52,6 +53,7 @@ export default function RootLayout({
         className={`${fraunces.variable} ${plexSans.variable} font-body bg-paper text-ink antialiased`}
       >
         {children}
+        <Analytics />
       </body>
     </html>
   );
